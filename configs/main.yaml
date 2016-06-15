@@ -1,22 +1,17 @@
 COMMON:
-    RUN_NAME: name_me
-    OUT_DIR_LOCATION: "/path/to/where/you/want/out_dir/to/be/put"
+    RUN_NAME: CHB106
+    OUT_DIR_LOCATION: "/home/gus/MEGAsync/zim/main/BCH/Projects/IBD_portal/data_preprocessing/pipeline_output"
+    REFERENCE_FASTA: &REFERENCE_FASTA /run/media/gus/Storage/BCH/data/g1k/reference_genome/human_g1k_v37.fasta
 
 
 # --------------------------------------
-RULE_PYSCRIPT:
-    SETTING1: ''
-    IN_FILE1: ''
-    IN_FILE2: ''
+CREATE_SEQ_FAI:
+    REF_FASTA: *REFERENCE_FASTA
 
 # --------------------------------------
-RULE_RSCRIPT:
-    SETTINGA: ''
-    IN_FILEA: ''
-    IN_FILEB: ''
+CREATE_SEQ_DICT:
+    REF_FASTA: *REFERENCE_FASTA
 
 # --------------------------------------
-RULE_SHELL_CMD:
-    SETTING_1: ''
-    IN_FILE_1: ''
-    IN_FILE_2: ''
+VALIDATE_INPUT_VCFS:
+    INPUT_VCF_DIR: /home/gus/MEGAsync/zim/main/BCH/Projects/IBD_portal/data_preprocessing/CHB106/VCFs

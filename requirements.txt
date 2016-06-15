@@ -14,3 +14,7 @@ numexpr
 numpy
 xlrd
 xlwt
+gatk
+picard
+samtools
+vcftools
