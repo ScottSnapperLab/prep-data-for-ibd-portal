@@ -1,7 +1,4 @@
 """Snakemake file."""
-
-# See tutorial at: http://tiny.cc/snakemake_tutorial
-
 import os
 
 from pathlib import Path
@@ -15,31 +12,88 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 sns.set_style("whitegrid")
 
+import munch
+
 from python.functions import *
 
+
+def pathify_by_key_ends(dictionary):
+    """Return a dict that has had all values with keys marked as '*_PATH' or '*_DIR' converted to Path() instances."""
+    for key, value in dictionary.items():
+        if isinstance(value, dict):
+            pathify_by_key_ends(value)
+        elif key.endswith("_PATH") or key.endswith("_DIR"):
+            dictionary[key] = Path(value)
+
+    return dictionary
+
+
+class MyRun(object):
+
+    """Initialize and manage information common to the whole run."""
+
+    def __init__(self, cfg):
+        """Initialize common information for a run."""
+        assert isinstance(cfg, dict)
+
+        common = cfg["COMMON"]
+
+        self.cfg = cfg
+        self.name = common["RUN_NAME"]
+        self.d = common["SHARED"]
+        self.out_dir = Path("{base_dir}/{run_name}".format(base_dir=common["OUT_DIR"],
+                                                           run_name=self.name
+                                                           )
+                            )
+        self.log_dir = self.out_dir / "logs"
+
+class MyRule(object):
+
+    """Manage the initialization and deployment of rule-specific information."""
+
+    def __init__(self, run, name):
+        """Initialize logs, inputs, outputs, params, etc for a single rule."""
+        assert isinstance(run, MyRun)
+
+        self.run = run
+        self.name = name.lower()
+        self.log = run.log_dir / "{name}.log".format(name=self.name)
+        self.out_dir = run.out_dir / self.name
+        self.i = munch.Munch() # inputs
+        self.o = munch.Munch() # outputs
+        self.p = munch.Munch() # params
+
+        try:
+            self.cfg = run.cfg[name.upper()]
+        except KeyError:
+            self.cfg = 'Rule {name} has no entry in the config file.'.format(name=name)
+
+
+
+#### COMMON RUN STUFF ####
 ORIGINAL_CONFIG_AS_STRING = yaml.dump(config, default_flow_style=False)
+config = pathify_by_key_ends(config)
+config = munch.munchify(config)
 
-
-#### COMMON RUN SPECIFICS ####
-
-RUN_NAME = config["COMMON"]["RUN_NAME"]
-OUT_DIR = Path("{base_dir}/{run_name}".format(base_dir=config["COMMON"]["OUT_DIR_LOCATION"], run_name=RUN_NAME))
-LOGS_DIR = OUT_DIR / "logs"
+RUN = MyRun(cfg=config)
 
 INPUT_ALL = []
 
 
 
+
 ############ BEGIN PIPELINE RULES ############
-
-
+# ------------------------- #
 #### SAVE_RUN_CONFIG ####
-SAVE_RUN_CONFIG_OUT = OUT_DIR / "{RUN_NAME}.yaml".format(RUN_NAME=RUN_NAME)
+SAVE_RUN_CONFIG = MyRule(run=RUN, name="SAVE_RUN_CONFIG")
+SAVE_RUN_CONFIG.o.file = RUN.out_dir / "{NAME}.yaml".format(NAME=RUN.name)
+
+
 
 rule save_run_config:
     input:
     output:
-        file=str(SAVE_RUN_CONFIG_OUT)
+        file=str(SAVE_RUN_CONFIG.o.file)
 
     run:
         with open(output.file, 'w') as cnf_out:
@@ -47,64 +101,71 @@ rule save_run_config:
 
 INPUT_ALL.append(rules.save_run_config.output)
 
+
+
+
+
+
+
+
+
+
+
+
 # ------------------------- #
 #### CREATE_SEQ_DICT ####
-CREATE_SEQ_DICT = config["CREATE_SEQ_DICT"]
+CREATE_SEQ_DICT = MyRule(run=RUN, name="CREATE_SEQ_DICT")
 
-# log
-LOG_CREATE_SEQ_DICT = LOGS_DIR / "create_seq_dict.log"
-
-# input
-REF_FASTA = Path(CREATE_SEQ_DICT["REF_FASTA"])
-
-# output
-FASTA_DICT = REF_FASTA.parent / "{stem}.dict".format(stem=REF_FASTA.stem)
-
+CREATE_SEQ_DICT.o.fasta_dict = RUN.d["REFERENCE_FASTA_PATH"].parent / "{stem}.dict".format(stem=RUN.d["REFERENCE_FASTA_PATH"].stem)
 
 # ---
 rule create_seq_dict:
     log:
-        path=str(LOG_CREATE_SEQ_DICT)
+        path=str(CREATE_SEQ_DICT.log)
 
     input:
-        ref_fasta=str(REF_FASTA),
+        ref_fasta=str(RUN.d["REFERENCE_FASTA_PATH"]),
 
     output:
-        fasta_dict=str(FASTA_DICT),
+        fasta_dict=str(CREATE_SEQ_DICT.o.fasta_dict),
 
     shell:
-        """ \
-        picard CreateSequenceDictionary \
-        R={input.ref_fasta} \
-        O={output.fasta_dict} \
-        &> {log.path} \
-        """
+        "picard CreateSequenceDictionary "
+        "R={input.ref_fasta} "
+        "O={output.fasta_dict} "
+        "&> {log.path} "
+
 INPUT_ALL.append(rules.create_seq_dict.output)
+
+
+
+
+
+
+
+
+
+
+
+
 
 # ------------------------- #
 #### CREATE_SEQ_FAI ####
-CREATE_SEQ_FAI = config["CREATE_SEQ_FAI"]
+CREATE_SEQ_FAI = MyRule(run=RUN, name="CREATE_SEQ_FAI")
 
-# log
-LOG_CREATE_SEQ_FAI = LOGS_DIR / "create_seq_fai.log"
-
-# input
-REF_FASTA = Path(CREATE_SEQ_FAI["REF_FASTA"])
-
-# output
-FASTA_FAI = REF_FASTA.parent / "{fas}.fai".format(fas=REF_FASTA)
+CREATE_SEQ_FAI.o.fasta_fai = RUN.d["REFERENCE_FASTA_PATH"].parent / "{fas}.fai".format(fas=RUN.d["REFERENCE_FASTA_PATH"])
 
 
 # ---
 rule create_seq_fai:
     log:
-        path=str(LOG_CREATE_SEQ_FAI)
+        path=str(CREATE_SEQ_FAI.log)
 
     input:
-        ref_fasta=str(REF_FASTA),
+        ref_fasta=str(RUN.d["REFERENCE_FASTA_PATH"]),
 
     output:
-        fasta_fai=str(FASTA_FAI),
+        fasta_fai=str(CREATE_SEQ_FAI.o.fasta_fai),
 
     shell:
         "samtools faidx "
@@ -114,48 +175,70 @@ rule create_seq_fai:
 INPUT_ALL.append(rules.create_seq_fai.output)
 
 
+
+
+
+
+
+
+
+
+
+
+
 # ------------------------- #
 #### VALIDATE_INPUT_VCFS ####
-VALIDATE_INPUT_VCFS = config["VALIDATE_INPUT_VCFS"]
-
-# log
-LOG_VALIDATE_INPUT_VCFS = LOGS_DIR / "validate_input_vcfs.log"
+VALIDATE_INPUT_VCFS = MyRule(run=RUN, name="VALIDATE_INPUT_VCFS")
 
 # input
-INPUT_VCF_DIR = Path(VALIDATE_INPUT_VCFS["INPUT_VCF_DIR"])
-INPUT_VCFS = str(INPUT_VCF_DIR / "{vcf}.vcf")
+VALIDATE_INPUT_VCFS.i.input_vcf = str(VALIDATE_INPUT_VCFS.cfg.IN.VCF_DIR / "{vcf_name}.vcf")
 
 # output
-VALIDATE_INPUT_VCFS_SENTINELS = str(OUT_DIR / "validate_input_vcfs" / "{vcf}_validated_on.txt")
-VALIDATE_INPUT_VCFS_OUTS_EXPANDED = [VALIDATE_INPUT_VCFS_SENTINELS.format(vcf=vcf.stem) for vcf in INPUT_VCF_DIR.glob("*.vcf")]
+VALIDATE_INPUT_VCFS.o.sentinel_template = str(VALIDATE_INPUT_VCFS.out_dir / "{vcf_name}_validated_on.txt" )
+
+VALIDATE_INPUT_VCFS.o.expanded_sentinels = [VALIDATE_INPUT_VCFS.o.sentinel_template.format(vcf_name=vcf.stem)
+                                            for vcf
+                                            in VALIDATE_INPUT_VCFS.cfg.IN.VCF_DIR.glob("*.vcf")
+                                            ]
 
 
 # ---
 rule validate_input_vcfs:
     log:
-        path=str(LOG_VALIDATE_INPUT_VCFS)
+        path=str(VALIDATE_INPUT_VCFS.log)
 
     input:
-        input_vcfs=INPUT_VCFS,
-        ref_fasta=str(REF_FASTA),
+        input_vcf=VALIDATE_INPUT_VCFS.i.input_vcf,
+        ref_fasta=str(RUN.d["REFERENCE_FASTA_PATH"]),
 
     output:
-        sentinels=VALIDATE_INPUT_VCFS_SENTINELS,
+        sentinels=VALIDATE_INPUT_VCFS.o.sentinel_template,
 
     shell:
         "gatk -T ValidateVariants "
         "-R {input.ref_fasta} "
-        "-V {input.input_vcfs} "
+        "-V {input.input_vcf} "
         "--warnOnErrors "
-        "--validationTypeToExclude ALL "
+        # "--validationTypeToExclude ALL "
         "&> {log.path} "
         "&& echo $(date) > {output.sentinels}"
 
-INPUT_ALL.append(VALIDATE_INPUT_VCFS_OUTS_EXPANDED)
+INPUT_ALL.append(VALIDATE_INPUT_VCFS.o.expanded_sentinels)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # ------------------------- #
-
-
 #### ALL ####
 # ---
 rule all:

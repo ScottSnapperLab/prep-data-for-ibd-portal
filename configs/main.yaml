@@ -1,17 +1,25 @@
 COMMON:
     RUN_NAME: CHB106
-    OUT_DIR_LOCATION: "/home/gus/MEGAsync/zim/main/BCH/Projects/IBD_portal/data_preprocessing/pipeline_output"
-    REFERENCE_FASTA: &REFERENCE_FASTA /run/media/gus/Storage/BCH/data/g1k/reference_genome/human_g1k_v37.fasta
+    OUT_DIR: "/home/gus/MEGAsync/zim/main/BCH/Projects/IBD_portal/data_preprocessing/pipeline_output"
+    SHARED:
+        REFERENCE_FASTA_PATH:  /run/media/gus/Storage/BCH/data/g1k/reference_genome/human_g1k_v37.fasta
 
 
 # --------------------------------------
 CREATE_SEQ_FAI:
-    REF_FASTA: *REFERENCE_FASTA
+    IN: None
+    OUT: None
+    PARAMS: None
 
 # --------------------------------------
 CREATE_SEQ_DICT:
-    REF_FASTA: *REFERENCE_FASTA
+    IN: None
+    OUT: None
+    PARAMS: None
 
 # --------------------------------------
 VALIDATE_INPUT_VCFS:
-    INPUT_VCF_DIR: /home/gus/MEGAsync/zim/main/BCH/Projects/IBD_portal/data_preprocessing/CHB106/VCFs
+    IN:
+        VCF_DIR: /home/gus/MEGAsync/zim/main/BCH/Projects/IBD_portal/data_preprocessing/test_fams/VCFs
+    OUT: None
+    PARAMS: None
