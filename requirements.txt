@@ -7,7 +7,7 @@ graphviz>=2.38.0
 snakemake>=3.4.2
 
 # Packages specific to your pipeline
-ipython
+jupyter
 seaborn
 pandas
 numexpr
@@ -17,5 +17,7 @@ xlwt
 gatk
 picard
 samtools
-vcftools
+bcftools
+vt
+htslib
 munch
