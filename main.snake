@@ -58,7 +58,8 @@ class MyRule(object):
 
         self.run = run
         self.name = name.lower()
-        self.log = run.log_dir / "{name}.log".format(name=self.name)
+        self.log_dir = run.log_dir / self.name
+        self.log = self.log_dir / "{name}.log".format(name=self.name)
         self.out_dir = run.out_dir / self.name
         self.i = munch.Munch() # inputs
         self.o = munch.Munch() # outputs
@@ -237,7 +238,7 @@ RECODE_INPUT_VCFS.o.vcf_expanded = expand(RECODE_INPUT_VCFS.o.vcf_wldcd, fam_nam
 # ---
 rule recode_input_vcfs:
     log:
-        path=str(RECODE_INPUT_VCFS.log)
+        path=str(RECODE_INPUT_VCFS.log_dir / "{fam_name}.log")
 
     params:
         # param_1=param_1,
@@ -253,8 +254,8 @@ rule recode_input_vcfs:
         "sed -u -e 's/AD,Number=./AD,Number=R/g' "
         "-e 's/MLEAC,Number=A/MLEAC,Number=R/g' "
         "-e 's/MLEAF,Number=A/MLEAF,Number=R/g' "
-        "-e 's/PL,Number=./PL,Number=G/g' >"
-        "{output.vcf}"
+        "-e 's/PL,Number=./PL,Number=G/g' > "
+        "{output.vcf} 2> {log.path}"
 
 CONVERSIONS.append(RECODE_INPUT_VCFS.o.vcf_expanded)
 
@@ -278,7 +279,7 @@ BGZIP_AND_IDX_VCFS.o.vcf_bgz_tbi_expanded = expand(BGZIP_AND_IDX_VCFS.o.vcf_bgz_
 # ---
 rule bgzip_and_idx_vcfs:
     log:
-        path=str(BGZIP_AND_IDX_VCFS.log)
+        path=str(BGZIP_AND_IDX_VCFS.log_dir / "{fam_name}")
 
     params:
 
@@ -290,8 +291,8 @@ rule bgzip_and_idx_vcfs:
         vcf_bgz_tbi=BGZIP_AND_IDX_VCFS.o.vcf_bgz_tbi_wldcd,
 
     shell:
-        "bgzip -c {input.vcf} > {output.vcf_bgz} &&"
-        "tabix -p vcf {output.vcf_bgz}"
+        "bgzip -c {input.vcf} > {output.vcf_bgz} 2>> {log.path}.bgzip.log &&"
+        "tabix -p vcf {output.vcf_bgz} > {log.path}.tabix.log 2>&1"
 
 CONVERSIONS.append(BGZIP_AND_IDX_VCFS.o.vcf_bgz_expanded + \
                  BGZIP_AND_IDX_VCFS.o.vcf_bgz_tbi_expanded)
@@ -337,7 +338,7 @@ MAKE_ANNO_TABLES.OUTPUT_2 =   MAKE_ANNO_TABLES.o.anno_table_path_bgz_expanded + 
 # ---
 rule make_anno_tables_1:
     log:
-        path=str(MAKE_ANNO_TABLES.log)
+        path=str(MAKE_ANNO_TABLES.log_dir / "{fam_name}.log")
 
     params:
         nmap=MAKE_ANNO_TABLES.PARAMS.NMAP,
@@ -360,8 +361,8 @@ CONVERSIONS.append(MAKE_ANNO_TABLES.OUTPUT_1)
 
 # ---
 rule make_anno_tables_2:
-    # log:
-    #     path=str(MAKE_ANNO_TABLES.log)
+    log:
+        path=str(MAKE_ANNO_TABLES.log_dir / "{fam_name}")
     #
     # params:
     #     nmap=MAKE_ANNO_TABLES.PARAMS.NMAP,
@@ -375,8 +376,8 @@ rule make_anno_tables_2:
 
 
     shell:
-        "bgzip -c {input.anno_table} > {output.anno_table_path_bgz} && "
-        "tabix -s1 -b2 -e2 -S1 {output.anno_table_path_bgz} "
+        "bgzip -c {input.anno_table} > {output.anno_table_path_bgz} 2>> {log.path}.bgzip.log && "
+        "tabix -s1 -b2 -e2 -S1 {output.anno_table_path_bgz} > {log.path}.tabix.log 2>&1"
 
 CONVERSIONS.append(MAKE_ANNO_TABLES.OUTPUT_2)
 
@@ -403,7 +404,7 @@ ANNOTATE_VCFS.o.bcf_expanded = expand(ANNOTATE_VCFS.o.bcf_wldcd, fam_name=RUN.gl
 # ---
 rule annotate_vcfs:
     log:
-        path=str(ANNOTATE_VCFS.log)
+        path=str(ANNOTATE_VCFS.log_dir / "{fam_name}.log")
 
     params:
         cols=ANNOTATE_VCFS.p.cols,
@@ -422,7 +423,7 @@ rule annotate_vcfs:
         "-h {input.anno_headers_path} "
         "-c {params.cols} {input.vcf} "
         "-Ou "
-        "-o {output.bcf}"
+        "-o {output.bcf} > {log.path} 2>&1"
 
 CONVERSIONS.append(ANNOTATE_VCFS.o.bcf_expanded)
 
@@ -446,7 +447,7 @@ LEFT_ALN_AND_NORM.o.vcf_expanded = expand(LEFT_ALN_AND_NORM.o.vcf_wldcd, fam_nam
 # ---
 rule left_aln_and_norm:
     log:
-        path=str(LEFT_ALN_AND_NORM.log)
+        path=str(LEFT_ALN_AND_NORM.log_dir / "{fam_name}")
 
     params:
         ref_fasta=LEFT_ALN_AND_NORM.p.ref_fasta,
@@ -460,10 +461,10 @@ rule left_aln_and_norm:
     shell:
         "vt normalize {input.bcf} "
         "-r {params.ref_fasta} "
-        "-o + | "
+        "-o + 2> {log.path}.vt.normalize.log  | "
         "vt decompose - "
         "-s "
-        "-o {output.vcf}"
+        "-o {output.vcf} > {log.path}.vt.decompse.log 2>&1"
 
 
 
