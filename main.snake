@@ -85,7 +85,8 @@ config = munch.munchify(config)
 RUN = MyRun(cfg=config)
 
 PRE = []
-INPUT_ALL = []
+CONVERSIONS = []
+MERGES = []
 
 # add specific useful stuff to RUN
 RUN.globals.fam_names = [vcf.stem for vcf in config.VALIDATE_INPUT_VCFS.IN.VCF_DIR.glob("*.vcf")]
@@ -110,7 +111,9 @@ rule save_run_config:
         with open(output.file, 'w') as cnf_out:
             cnf_out.write(ORIGINAL_CONFIG_AS_STRING)
 
-INPUT_ALL.append(rules.save_run_config.output)
+PRE.append(rules.save_run_config.output)
+CONVERSIONS.append(rules.save_run_config.output)
+MERGES.append(rules.save_run_config.output)
 
 
 
@@ -253,7 +256,7 @@ rule recode_input_vcfs:
         "-e 's/PL,Number=./PL,Number=G/g' >"
         "{output.vcf}"
 
-INPUT_ALL.append(RECODE_INPUT_VCFS.o.vcf_expanded)
+CONVERSIONS.append(RECODE_INPUT_VCFS.o.vcf_expanded)
 
 
 # ------------------------- #
@@ -290,7 +293,7 @@ rule bgzip_and_idx_vcfs:
         "bgzip -c {input.vcf} > {output.vcf_bgz} &&"
         "tabix -p vcf {output.vcf_bgz}"
 
-INPUT_ALL.append(BGZIP_AND_IDX_VCFS.o.vcf_bgz_expanded + \
+CONVERSIONS.append(BGZIP_AND_IDX_VCFS.o.vcf_bgz_expanded + \
                  BGZIP_AND_IDX_VCFS.o.vcf_bgz_tbi_expanded)
 
 
@@ -353,7 +356,7 @@ rule make_anno_tables_1:
     script:
         "python/scripts/make_anno_tables.py"
 
-INPUT_ALL.append(MAKE_ANNO_TABLES.OUTPUT_1)
+CONVERSIONS.append(MAKE_ANNO_TABLES.OUTPUT_1)
 
 # ---
 rule make_anno_tables_2:
@@ -375,7 +378,7 @@ rule make_anno_tables_2:
         "bgzip -c {input.anno_table} > {output.anno_table_path_bgz} && "
         "tabix -s1 -b2 -e2 -S1 {output.anno_table_path_bgz} "
 
-INPUT_ALL.append(MAKE_ANNO_TABLES.OUTPUT_2)
+CONVERSIONS.append(MAKE_ANNO_TABLES.OUTPUT_2)
 
 
 # ------------------------- #
@@ -421,7 +424,7 @@ rule annotate_vcfs:
         "-Ou "
         "-o {output.bcf}"
 
-INPUT_ALL.append(ANNOTATE_VCFS.o.bcf_expanded)
+CONVERSIONS.append(ANNOTATE_VCFS.o.bcf_expanded)
 
 
 # ------------------------- #
@@ -464,7 +467,7 @@ rule left_aln_and_norm:
 
 
 
-INPUT_ALL.append(LEFT_ALN_AND_NORM.o.vcf_expanded)
+CONVERSIONS.append(LEFT_ALN_AND_NORM.o.vcf_expanded)
 
 
 
@@ -478,17 +481,17 @@ rule pre:
 
 
 # ------------------------- #
-#### ALL ####
+#### CONVERSIONS ####
 # ---
-rule all:
-    input: INPUT_ALL
+rule conversions:
+    input: CONVERSIONS
 
 
-# # ------------------------- #
-# #### POST ####
-# # ---
-# rule post:
-#     input: POST
+# ------------------------- #
+#### MERGES ####
+# ---
+rule merges:
+    input: MERGES
 
 
 # ------------------------- #
