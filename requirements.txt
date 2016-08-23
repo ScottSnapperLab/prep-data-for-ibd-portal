@@ -8,6 +8,7 @@ snakemake>=3.4.2
 
 # Packages specific to your pipeline
 jupyter
+sphinx
 seaborn
 pandas
 numexpr

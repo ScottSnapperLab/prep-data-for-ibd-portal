@@ -1,8 +1,8 @@
 COMMON:
-    RUN_NAME: test_fams
-    OUT_DIR: "/home/gus/MEGAsync/zim/main/BCH/Projects/IBD_portal/data_preprocessing/pipeline_output"
+    RUN_NAME: single_sibs
+    OUT_DIR: "data/processed"
     SHARED:
-        REFERENCE_FASTA_PATH:  /run/media/gus/Storage/BCH/data/g1k/reference_genome/human_g1k_v37.fasta
+        REFERENCE_FASTA_PATH:  data/external/g1k/reference_genome/human_g1k_v37.fasta
 
 
 # --------------------------------------
@@ -20,14 +20,14 @@ CREATE_SEQ_DICT:
 # --------------------------------------
 VALIDATE_INPUT_VCFS:
     IN:
-        VCF_DIR: /home/gus/MEGAsync/zim/main/BCH/Projects/IBD_portal/data_preprocessing/test_fams/VCFs
+        VCF_DIR: data/raw/VCFs
     OUT: None
     PARAMS: None
 
 # --------------------------------------
 MAKE_ANNO_TABLES:
     IN:
-        XLS_DIR: /home/gus/MEGAsync/zim/main/BCH/Projects/IBD_portal/data_preprocessing/test_fams/XLSs
+        XLS_DIR: data/raw/XLSs
     OUT: None
     PARAMS:
         NMAP:
@@ -46,7 +46,7 @@ MAKE_ANNO_TABLES:
 # --------------------------------------
 ANNOTATE_VCFS:
     IN:
-        VCF_DIR: /home/gus/MEGAsync/zim/main/BCH/Projects/IBD_portal/data_preprocessing/test_fams/VCFs
+        VCF_DIR: data/raw/VCFs
     OUT: None
     PARAMS:
         COLS: "CHROM,POS,AGE_MO,BAM_OK,FAM_ID,MOI"

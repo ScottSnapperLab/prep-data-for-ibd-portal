@@ -14,7 +14,7 @@ sns.set_style("whitegrid")
 
 import munch
 
-from python.functions import *
+from src.python.functions import *
 
 
 def pathify_by_key_ends(dictionary):
@@ -86,12 +86,12 @@ config = munch.munchify(config)
 RUN = MyRun(cfg=config)
 
 PRE = []
+VALIDATE_INPUT = []
 CONVERSIONS = []
 MERGES = []
 
 # add specific useful stuff to RUN
 RUN.globals.fam_names = [vcf.stem for vcf in config.VALIDATE_INPUT_VCFS.IN.VCF_DIR.glob("*.vcf")]
-
 
 
 ############ BEGIN PIPELINE RULES ############
@@ -159,7 +159,7 @@ PRE.append(rules.create_seq_dict.output)
 #### CREATE_SEQ_FAI ####
 CREATE_SEQ_FAI = MyRule(run=RUN, name="CREATE_SEQ_FAI")
 
-CREATE_SEQ_FAI.o.fasta_fai = RUN.d["REFERENCE_FASTA_PATH"].parent / "{fas}.fai".format(fas=RUN.d["REFERENCE_FASTA_PATH"])
+CREATE_SEQ_FAI.o.fasta_fai = "{fas}.fai".format(fas=RUN.d["REFERENCE_FASTA_PATH"])
 
 
 # ---
@@ -199,12 +199,16 @@ VALIDATE_INPUT_VCFS.o.sentinels_expanded = expand(VALIDATE_INPUT_VCFS.o.sentinel
 
 # ---
 rule validate_input_vcfs:
+    priority: 90
     log:
         path=str(VALIDATE_INPUT_VCFS.log)
 
     input:
+        rules.create_seq_dict.output,
+        rules.create_seq_fai.output,
         input_vcf=VALIDATE_INPUT_VCFS.i.input_vcf,
         ref_fasta=str(RUN.d["REFERENCE_FASTA_PATH"]),
+
 
     output:
         sentinels=VALIDATE_INPUT_VCFS.o.sentinel_wldcd,
@@ -218,7 +222,7 @@ rule validate_input_vcfs:
         "&> {log.path} "
         "&& echo $(date) > {output.sentinels}"
 
-PRE.append(VALIDATE_INPUT_VCFS.o.sentinels_expanded)
+CONVERSIONS.append(VALIDATE_INPUT_VCFS.o.sentinels_expanded)
 
 
 # ------------------------- #
@@ -355,7 +359,7 @@ rule make_anno_tables_1:
 
 
     script:
-        "python/scripts/make_anno_tables.py"
+        "src/python/rules/make_anno_tables.py"
 
 CONVERSIONS.append(MAKE_ANNO_TABLES.OUTPUT_1)
 
@@ -496,8 +500,23 @@ rule merges:
 
 
 # ------------------------- #
-#### CLEAN ####
+#### CLEAN_CONVERSIONS ####
 # ---
-rule clean:
+rule clean_conversions:
     shell:
-        "rm -rf {out_dir}".format(out_dir=RUN.out_dir)
+        "rm -rf {RUN.out_dir} && find data/raw -type f -name '*.idx' -print0 | xargs -0 rm &> /dev/null || true"
+
+# ------------------------- #
+#### CLEAN_PRE ####
+# ---
+rule clean_pre:
+    shell:
+        "find data/external -type f -name '*.dict' -print0 | xargs -0 rm &> /dev/null || true && "
+        "find data/external -type f -name '*.fai' -print0 | xargs -0 rm &> /dev/null || true"
+
+# ------------------------- #
+#### CLEAN_ALL ####
+# ---
+rule clean_all:
+    shell:
+        "{rules.clean_pre.shellcmd} && {rules.clean_conversions.shellcmd}"
