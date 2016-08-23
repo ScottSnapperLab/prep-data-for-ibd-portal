@@ -5,7 +5,7 @@ import shlex as lex
 
 import pandas as pd
 
-from python.functions import bool_to_int
+from src.python.functions import bool_to_int
 
 # try:
 #     snakemake = snakemake
@@ -29,7 +29,7 @@ def extract_columns(xls, nmap, converters=None):
 
     xls = str(xls)
 
-    sheets = pd.read_excel(xls, sheetname=None, header=1, converters=converters)
+    sheets = pd.read_excel(xls, sheetname=None, header=1, converters=converters, parse_cols=4)
 
     # combine into a single table
     df = pd.concat([df for df in sheets.values()], axis=0)
