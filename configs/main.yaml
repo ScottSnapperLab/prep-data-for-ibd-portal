@@ -1,8 +1,8 @@
 COMMON:
-    RUN_NAME: CHB106
-    OUT_DIR: "/home/gus/MEGAsync/zim/main/BCH/Projects/IBD_portal/data_preprocessing/pipeline_output"
+    RUN_NAME: single_sibs
+    OUT_DIR: "data/processed"
     SHARED:
-        REFERENCE_FASTA_PATH:  /run/media/gus/Storage/BCH/data/g1k/reference_genome/human_g1k_v37.fasta
+        REFERENCE_FASTA_PATH:  data/external/g1k/reference_genome/human_g1k_v37.fasta
 
 
 # --------------------------------------
@@ -20,6 +20,33 @@ CREATE_SEQ_DICT:
 # --------------------------------------
 VALIDATE_INPUT_VCFS:
     IN:
-        VCF_DIR: /home/gus/MEGAsync/zim/main/BCH/Projects/IBD_portal/data_preprocessing/test_fams/VCFs
+        VCF_DIR: data/raw/VCFs
     OUT: None
     PARAMS: None
+
+# --------------------------------------
+MAKE_ANNO_TABLES:
+    IN:
+        XLS_DIR: data/raw/XLSs
+    OUT: None
+    PARAMS:
+        NMAP:
+            "AGE(MO)": AGE_MO
+            "BAM CLEAR": BAM_OK
+            "Chr:Pos": Chr_Pos
+            "FAMILY": FAM_ID
+            "INHERIT": MOI
+        HEADERS:
+            - "##INFO=<ID=AGE_MO,Number=1,Type=Float,Description=\"Age of associated proband in months.\">"
+            - "##INFO=<ID=FAM_ID,Number=1,Type=String,Description=\"Identification of family to which the individual belongs.\">"
+            - "##INFO=<ID=BAM_OK,Number=0,Type=Flag,Description=\"Manual inspection of the BAM file corroborates the MOI.\">"
+            - "##INFO=<ID=MOI,Number=1,Type=String,Description=\"Mode of Inheritance: HZR=recessive, DeNovo=de novo, XL=X-linked, CmpHet=Compound Het\">"
+
+
+# --------------------------------------
+ANNOTATE_VCFS:
+    IN:
+        VCF_DIR: data/raw/VCFs
+    OUT: None
+    PARAMS:
+        COLS: "CHROM,POS,AGE_MO,BAM_OK,FAM_ID,MOI"
