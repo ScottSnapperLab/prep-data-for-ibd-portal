@@ -64,3 +64,9 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# Dont track data
+data/
+
+# notebook checkpoints
+.ipynb_checkpoints/

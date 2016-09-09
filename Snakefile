@@ -248,6 +248,7 @@ rule recode_input_vcfs:
         # param_1=param_1,
 
     input:
+        validation_complete=VALIDATE_INPUT_VCFS.o.sentinel_wldcd,
         vcf=RECODE_INPUT_VCFS.i.vcf,
 
     output:
@@ -349,7 +350,7 @@ rule make_anno_tables_1:
         headers=MAKE_ANNO_TABLES.PARAMS.HEADERS,
 
     input:
-        xls=str(MAKE_ANNO_TABLES.IN.XLS_DIR / "{fam_name}.xlsx"),
+        xls=str(MAKE_ANNO_TABLES.IN.XLS_DIR / "{fam_name}.xls"),
 
     output:
         anno_table_path=MAKE_ANNO_TABLES.o.anno_table_path_wldcd,
@@ -423,9 +424,11 @@ rule annotate_vcfs:
 
     shell:
         "bcftools annotate "
-        "-a {input.anno_table_path_bgz} "
-        "-h {input.anno_headers_path} "
-        "-c {params.cols} {input.vcf} "
+        "-x INFO "
+        # "-a {input.anno_table_path_bgz} "
+        # "-h {input.anno_headers_path} "
+        # "-c {params.cols} "
+        "{input.vcf} "
         "-Ou "
         "-o {output.bcf} > {log.path} 2>&1"
 
@@ -473,6 +476,39 @@ rule left_aln_and_norm:
 
 
 CONVERSIONS.append(LEFT_ALN_AND_NORM.o.vcf_expanded)
+
+
+# # ------------------------- #
+# #### MERGE_BCFS ####
+# MERGE_BCFS = MyRule(run=RUN, name="MERGE_BCFS")
+#
+# # params
+# MERGE_BCFS.p.param_1 = MERGE_BCFS.PARAMS.param_1
+#
+# # input
+# MERGE_BCFS.i.input_1 = str(MERGE_BCFS.IN.input_1 / "{something}.ext")
+#
+# # output
+# MERGE_BCFS.o.output_1 = str(MERGE_BCFS.out_dir / "{something}.ext")
+#
+# # ---
+# rule merge_bcfs:
+#     log:
+#         path=str(MERGE_BCFS.log)
+#
+#     params:
+#         param_1=MERGE_BCFS.p.param_1,
+#
+#     input:
+#         input_1=MERGE_BCFS.i.input_1,
+#
+#     output:
+#         output_1=MERGE_BCFS.o.output_1,
+#
+#     shell:
+#         ""
+#
+# MERGES.append(rules.merge_bcfs.output)
 
 
 

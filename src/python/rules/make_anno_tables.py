@@ -29,7 +29,7 @@ def extract_columns(xls, nmap, converters=None):
 
     xls = str(xls)
 
-    sheets = pd.read_excel(xls, sheetname=None, header=1, converters=converters, parse_cols=4)
+    sheets = pd.read_excel(xls, sheetname=None, header=0, converters=converters, parse_cols=4)
 
     # combine into a single table
     df = pd.concat([df for df in sheets.values()], axis=0)
