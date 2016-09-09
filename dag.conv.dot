@@ -1,0 +1,56 @@
+digraph snakemake_dag {
+    graph[bgcolor=white, margin=0];
+    node[shape=box, style=rounded, fontname=sans,                 fontsize=10, penwidth=2];
+    edge[penwidth=2, color=grey];
+	0[label = "make_anno_tables_1\nfam_name: CHB099", color = "0.50 0.6 0.85", style="rounded,dashed"];
+	1[label = "make_anno_tables_2", color = "0.54 0.6 0.85", style="rounded,dashed"];
+	2[label = "recode_input_vcfs\nfam_name: CHB106", color = "0.12 0.6 0.85", style="rounded,dashed"];
+	3[label = "annotate_vcfs", color = "0.46 0.6 0.85", style="rounded"];
+	4[label = "annotate_vcfs", color = "0.46 0.6 0.85", style="rounded,dashed"];
+	5[label = "make_anno_tables_2", color = "0.54 0.6 0.85", style="rounded,dashed"];
+	6[label = "left_aln_and_norm", color = "0.04 0.6 0.85", style="rounded"];
+	7[label = "bgzip_and_idx_vcfs", color = "0.00 0.6 0.85", style="rounded,dashed"];
+	8[label = "conversions", color = "0.42 0.6 0.85", style="rounded"];
+	9[label = "save_run_config", color = "0.58 0.6 0.85", style="rounded,dashed"];
+	10[label = "create_seq_dict", color = "0.17 0.6 0.85", style="rounded,dashed"];
+	11[label = "create_seq_fai", color = "0.21 0.6 0.85", style="rounded,dashed"];
+	12[label = "bgzip_and_idx_vcfs", color = "0.00 0.6 0.85", style="rounded,dashed"];
+	13[label = "make_anno_tables_1\nfam_name: CHB106", color = "0.50 0.6 0.85", style="rounded,dashed"];
+	14[label = "validate_input_vcfs\nfam_name: CHB099", color = "0.33 0.6 0.85", style="rounded,dashed"];
+	15[label = "left_aln_and_norm", color = "0.04 0.6 0.85", style="rounded"];
+	16[label = "validate_input_vcfs\nfam_name: CHB106", color = "0.33 0.6 0.85", style="rounded,dashed"];
+	17[label = "recode_input_vcfs\nfam_name: CHB099", color = "0.12 0.6 0.85", style="rounded,dashed"];
+	0 -> 1
+	13 -> 1
+	0 -> 3
+	5 -> 3
+	7 -> 3
+	1 -> 4
+	13 -> 4
+	12 -> 4
+	0 -> 5
+	13 -> 5
+	4 -> 6
+	17 -> 7
+	0 -> 8
+	1 -> 8
+	2 -> 8
+	3 -> 8
+	4 -> 8
+	5 -> 8
+	6 -> 8
+	7 -> 8
+	9 -> 8
+	12 -> 8
+	13 -> 8
+	14 -> 8
+	15 -> 8
+	16 -> 8
+	17 -> 8
+	2 -> 12
+	10 -> 14
+	11 -> 14
+	3 -> 15
+	10 -> 16
+	11 -> 16
+}            
