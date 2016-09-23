@@ -1,0 +1,31 @@
+digraph snakemake_dag {
+    graph[bgcolor=white, margin=0];
+    node[shape=box, style=rounded, fontname=sans,                 fontsize=10, penwidth=2];
+    edge[penwidth=2, color=grey];
+	0[label = "left_aln_and_norm", color = "0.17 0.6 0.85", style="rounded"];
+	1[label = "recode_input_vcfs", color = "0.21 0.6 0.85", style="rounded"];
+	2[label = "create_seq_dict", color = "0.25 0.6 0.85", style="rounded"];
+	3[label = "make_anno_tables_1", color = "0.38 0.6 0.85", style="rounded"];
+	/*4[label = "conversions", color = "0.42 0.6 0.85", style="rounded"];*/
+	5[label = "validate_input_vcfs", color = "0.04 0.6 0.85", style="rounded"];
+	6[label = "bgzip_and_idx_vcfs", color = "0.33 0.6 0.85", style="rounded"];
+	7[label = "make_anno_tables_2", color = "0.12 0.6 0.85", style="rounded"];
+	8[label = "annotate_vcfs", color = "0.50 0.6 0.85", style="rounded"];
+	9[label = "create_seq_fai", color = "0.62 0.6 0.85", style="rounded"];
+	10[label = "save_run_config", color = "0.58 0.6 0.85", style="rounded"];
+	8 -> 0
+	5 -> 1
+	/*5 -> 4
+	7 -> 4
+	0 -> 4
+	1 -> 4
+	6 -> 4
+	3 -> 4
+	8 -> 4
+	10 -> 4*/
+	2 -> 5
+	9 -> 5
+	1 -> 6
+	3 -> 7
+	6 -> 8
+}
