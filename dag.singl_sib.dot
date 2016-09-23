@@ -1,0 +1,289 @@
+digraph snakemake_dag {
+    graph[bgcolor=white, margin=0];
+    node[shape=box, style=rounded, fontname=sans,                 fontsize=10, penwidth=2];
+    edge[penwidth=2, color=grey];
+	0[label = "create_seq_fai", color = "0.08 0.6 0.85", style="rounded,dashed"];
+	1[label = "annotate_vcfs", color = "0.12 0.6 0.85", style="rounded,dashed"];
+	2[label = "left_aln_and_norm", color = "0.17 0.6 0.85", style="rounded,dashed"];
+	3[label = "make_anno_tables_2", color = "0.58 0.6 0.85", style="rounded,dashed"];
+	4[label = "bgzip_and_idx_vcfs", color = "0.46 0.6 0.85", style="rounded,dashed"];
+	5[label = "bgzip_and_idx_vcfs", color = "0.46 0.6 0.85", style="rounded,dashed"];
+	6[label = "left_aln_and_norm", color = "0.17 0.6 0.85", style="rounded,dashed"];
+	7[label = "make_anno_tables_2", color = "0.58 0.6 0.85", style="rounded,dashed"];
+	8[label = "validate_input_vcfs\nfam_name: CHB230", color = "0.62 0.6 0.85", style="rounded,dashed"];
+	9[label = "validate_input_vcfs\nfam_name: CHB116", color = "0.62 0.6 0.85", style="rounded,dashed"];
+	10[label = "validate_input_vcfs\nfam_name: CHB099", color = "0.62 0.6 0.85", style="rounded,dashed"];
+	11[label = "annotate_vcfs", color = "0.12 0.6 0.85", style="rounded,dashed"];
+	12[label = "make_anno_tables_1\nfam_name: CHB159", color = "0.04 0.6 0.85", style="rounded,dashed"];
+	13[label = "bgzip_and_idx_vcfs", color = "0.46 0.6 0.85", style="rounded,dashed"];
+	14[label = "left_aln_and_norm", color = "0.17 0.6 0.85", style="rounded"];
+	15[label = "left_aln_and_norm", color = "0.17 0.6 0.85", style="rounded,dashed"];
+	16[label = "validate_input_vcfs\nfam_name: CHB159", color = "0.62 0.6 0.85", style="rounded,dashed"];
+	17[label = "make_anno_tables_2", color = "0.58 0.6 0.85", style="rounded,dashed"];
+	18[label = "validate_input_vcfs\nfam_name: CHB147", color = "0.62 0.6 0.85", style="rounded,dashed"];
+	19[label = "make_anno_tables_1\nfam_name: CHB099", color = "0.04 0.6 0.85", style="rounded,dashed"];
+	20[label = "recode_input_vcfs", color = "0.21 0.6 0.85", style="rounded,dashed"];
+	21[label = "make_anno_tables_1\nfam_name: CHB188", color = "0.04 0.6 0.85", style="rounded,dashed"];
+	22[label = "bgzip_and_idx_vcfs", color = "0.46 0.6 0.85", style="rounded,dashed"];
+	23[label = "annotate_vcfs", color = "0.12 0.6 0.85", style="rounded,dashed"];
+	24[label = "validate_input_vcfs\nfam_name: CHB156", color = "0.62 0.6 0.85", style="rounded,dashed"];
+	25[label = "create_seq_dict", color = "0.54 0.6 0.85", style="rounded,dashed"];
+	26[label = "left_aln_and_norm", color = "0.17 0.6 0.85", style="rounded,dashed"];
+	27[label = "make_anno_tables_2", color = "0.58 0.6 0.85", style="rounded,dashed"];
+	28[label = "recode_input_vcfs", color = "0.21 0.6 0.85", style="rounded"];
+	29[label = "bgzip_and_idx_vcfs", color = "0.46 0.6 0.85", style="rounded,dashed"];
+	/*30[label = "conversions", color = "0.00 0.6 0.85", style="rounded"];*/
+	31[label = "make_anno_tables_1\nfam_name: CHB312", color = "0.04 0.6 0.85", style="rounded,dashed"];
+	32[label = "recode_input_vcfs", color = "0.21 0.6 0.85", style="rounded,dashed"];
+	33[label = "bgzip_and_idx_vcfs", color = "0.46 0.6 0.85", style="rounded"];
+	34[label = "make_anno_tables_1\nfam_name: CHB230", color = "0.04 0.6 0.85", style="rounded,dashed"];
+	35[label = "recode_input_vcfs", color = "0.21 0.6 0.85", style="rounded,dashed"];
+	36[label = "make_anno_tables_1\nfam_name: CHB147", color = "0.04 0.6 0.85", style="rounded,dashed"];
+	37[label = "annotate_vcfs", color = "0.12 0.6 0.85", style="rounded,dashed"];
+	38[label = "annotate_vcfs", color = "0.12 0.6 0.85", style="rounded,dashed"];
+	39[label = "save_run_config", color = "0.50 0.6 0.85", style="rounded,dashed"];
+	40[label = "make_anno_tables_1\nfam_name: CHB106", color = "0.04 0.6 0.85", style="rounded,dashed"];
+	41[label = "validate_input_vcfs\nfam_name: CHB188", color = "0.62 0.6 0.85", style="rounded,dashed"];
+	42[label = "make_anno_tables_2", color = "0.58 0.6 0.85", style="rounded,dashed"];
+	43[label = "recode_input_vcfs", color = "0.21 0.6 0.85", style="rounded,dashed"];
+	44[label = "recode_input_vcfs", color = "0.21 0.6 0.85", style="rounded,dashed"];
+	45[label = "bgzip_and_idx_vcfs", color = "0.46 0.6 0.85", style="rounded,dashed"];
+	46[label = "make_anno_tables_2", color = "0.58 0.6 0.85", style="rounded,dashed"];
+	47[label = "annotate_vcfs", color = "0.12 0.6 0.85", style="rounded,dashed"];
+	48[label = "left_aln_and_norm", color = "0.17 0.6 0.85", style="rounded,dashed"];
+	49[label = "left_aln_and_norm", color = "0.17 0.6 0.85", style="rounded,dashed"];
+	50[label = "make_anno_tables_1\nfam_name: CHB116", color = "0.04 0.6 0.85", style="rounded,dashed"];
+	51[label = "validate_input_vcfs\nfam_name: CHB312", color = "0.62 0.6 0.85", style="rounded,dashed"];
+	52[label = "bgzip_and_idx_vcfs", color = "0.46 0.6 0.85", style="rounded,dashed"];
+	53[label = "annotate_vcfs", color = "0.12 0.6 0.85", style="rounded,dashed"];
+	54[label = "recode_input_vcfs", color = "0.21 0.6 0.85", style="rounded,dashed"];
+	55[label = "bgzip_and_idx_vcfs", color = "0.46 0.6 0.85", style="rounded,dashed"];
+	56[label = "make_anno_tables_2", color = "0.58 0.6 0.85", style="rounded,dashed"];
+	57[label = "annotate_vcfs", color = "0.12 0.6 0.85", style="rounded,dashed"];
+	58[label = "make_anno_tables_2", color = "0.58 0.6 0.85", style="rounded,dashed"];
+	59[label = "recode_input_vcfs", color = "0.21 0.6 0.85", style="rounded,dashed"];
+	60[label = "make_anno_tables_2", color = "0.58 0.6 0.85", style="rounded,dashed"];
+	61[label = "recode_input_vcfs", color = "0.21 0.6 0.85", style="rounded,dashed"];
+	62[label = "validate_input_vcfs\nfam_name: CHB106", color = "0.62 0.6 0.85", style="rounded,dashed"];
+	63[label = "left_aln_and_norm", color = "0.17 0.6 0.85", style="rounded,dashed"];
+	64[label = "make_anno_tables_1\nfam_name: CHB156", color = "0.04 0.6 0.85", style="rounded,dashed"];
+	65[label = "left_aln_and_norm", color = "0.17 0.6 0.85", style="rounded,dashed"];
+	66[label = "annotate_vcfs", color = "0.12 0.6 0.85", style="rounded"];
+	5 -> 1
+	56 -> 1
+	31 -> 1
+	37 -> 2
+	19 -> 3
+	64 -> 3
+	40 -> 3
+	50 -> 3
+	34 -> 3
+	21 -> 3
+	12 -> 3
+	36 -> 3
+	31 -> 3
+	43 -> 4
+	32 -> 5
+	47 -> 6
+	19 -> 7
+	64 -> 7
+	40 -> 7
+	50 -> 7
+	34 -> 7
+	21 -> 7
+	12 -> 7
+	36 -> 7
+	31 -> 7
+	25 -> 8
+	0 -> 8
+	25 -> 9
+	0 -> 9
+	25 -> 10
+	0 -> 10
+	34 -> 11
+	7 -> 11
+	4 -> 11
+	44 -> 13
+	66 -> 14
+	57 -> 15
+	25 -> 16
+	0 -> 16
+	19 -> 17
+	64 -> 17
+	40 -> 17
+	50 -> 17
+	34 -> 17
+	21 -> 17
+	12 -> 17
+	36 -> 17
+	31 -> 17
+	25 -> 18
+	0 -> 18
+	62 -> 20
+	54 -> 22
+	36 -> 23
+	13 -> 23
+	58 -> 23
+	25 -> 24
+	0 -> 24
+	38 -> 26
+	19 -> 27
+	64 -> 27
+	40 -> 27
+	50 -> 27
+	34 -> 27
+	21 -> 27
+	12 -> 27
+	36 -> 27
+	31 -> 27
+	41 -> 28
+	61 -> 29
+	/*1 -> 30
+	42 -> 30
+	3 -> 30
+	5 -> 30
+	6 -> 30
+	7 -> 30
+	51 -> 30
+	8 -> 30
+	9 -> 30
+	10 -> 30
+	12 -> 30
+	13 -> 30
+	14 -> 30
+	45 -> 30
+	16 -> 30
+	17 -> 30
+	18 -> 30
+	19 -> 30
+	20 -> 30
+	21 -> 30
+	22 -> 30
+	23 -> 30
+	24 -> 30
+	26 -> 30
+	63 -> 30
+	27 -> 30
+	28 -> 30
+	29 -> 30
+	31 -> 30
+	32 -> 30
+	33 -> 30
+	34 -> 30
+	35 -> 30
+	36 -> 30
+	37 -> 30
+	38 -> 30
+	39 -> 30
+	40 -> 30
+	41 -> 30
+	2 -> 30
+	43 -> 30
+	44 -> 30
+	15 -> 30
+	46 -> 30
+	47 -> 30
+	48 -> 30
+	49 -> 30
+	50 -> 30
+	57 -> 30
+	52 -> 30
+	53 -> 30
+	54 -> 30
+	55 -> 30
+	56 -> 30
+	58 -> 30
+	59 -> 30
+	60 -> 30
+	61 -> 30
+	62 -> 30
+	4 -> 30
+	64 -> 30
+	66 -> 30
+	65 -> 30
+	11 -> 30*/
+	51 -> 32
+	28 -> 33
+	9 -> 35
+	12 -> 37
+	45 -> 37
+	3 -> 37
+	46 -> 38
+	19 -> 38
+	29 -> 38
+	25 -> 41
+	0 -> 41
+	19 -> 42
+	64 -> 42
+	40 -> 42
+	50 -> 42
+	34 -> 42
+	21 -> 42
+	12 -> 42
+	36 -> 42
+	31 -> 42
+	8 -> 43
+	18 -> 44
+	59 -> 45
+	19 -> 46
+	64 -> 46
+	40 -> 46
+	50 -> 46
+	34 -> 46
+	21 -> 46
+	12 -> 46
+	36 -> 46
+	31 -> 46
+	52 -> 47
+	40 -> 47
+	27 -> 47
+	23 -> 48
+	11 -> 49
+	25 -> 51
+	0 -> 51
+	20 -> 52
+	22 -> 53
+	64 -> 53
+	60 -> 53
+	24 -> 54
+	35 -> 55
+	19 -> 56
+	64 -> 56
+	40 -> 56
+	50 -> 56
+	34 -> 56
+	21 -> 56
+	12 -> 56
+	36 -> 56
+	31 -> 56
+	17 -> 57
+	50 -> 57
+	55 -> 57
+	19 -> 58
+	64 -> 58
+	40 -> 58
+	50 -> 58
+	34 -> 58
+	21 -> 58
+	12 -> 58
+	36 -> 58
+	31 -> 58
+	16 -> 59
+	19 -> 60
+	64 -> 60
+	40 -> 60
+	50 -> 60
+	34 -> 60
+	21 -> 60
+	12 -> 60
+	36 -> 60
+	31 -> 60
+	10 -> 61
+	25 -> 62
+	0 -> 62
+	53 -> 63
+	1 -> 65
+	21 -> 66
+	42 -> 66
+	33 -> 66
+}
