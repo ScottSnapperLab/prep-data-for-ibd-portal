@@ -103,6 +103,8 @@ MERGES = []
 
 # add specific useful stuff to RUN
 RUN.globals.fam_names = [vcf.stem for vcf in config.VALIDATE_INPUT_VCFS.IN.VCF_DIR.glob("*.vcf")]
+RUN.globals.mois = ['HZR','DeNovo','XL','CmpHet',]
+RUN.globals.draw_rule = 'conversions'
 
 
 ############ BEGIN PIPELINE RULES ############
@@ -373,7 +375,7 @@ rule make_anno_tables_1:
     script:
         "src/python/rules/make_anno_tables.py"
 
-# CONVERSIONS.append(MAKE_ANNO_TABLES.OUTPUT_1)
+CONVERSIONS.append(MAKE_ANNO_TABLES.OUTPUT_1)
 
 # ---
 rule make_anno_tables_2:
@@ -506,7 +508,7 @@ BGZIP_AND_IDX_CONVERTED_VCFS.o.vcf_bgz_expanded = expand(BGZIP_AND_IDX_CONVERTED
 BGZIP_AND_IDX_CONVERTED_VCFS.o.vcf_bgz_tbi_expanded = expand(BGZIP_AND_IDX_CONVERTED_VCFS.o.vcf_bgz_tbi_wldcd, fam_name=RUN.globals.fam_names)
 
 # ---
-rule BGZIP_AND_IDX_CONVERTED_VCFS:
+rule bgzip_and_idx_converted_vcfs:
     log:
         path=str(BGZIP_AND_IDX_CONVERTED_VCFS.log_dir / "{fam_name}")
 
@@ -559,37 +561,88 @@ rule merge_vcfs:
 CONVERSIONS.append(rules.merge_vcfs.output)
 
 
-# # ------------------------- #
-# #### FAM_ANNOTATIONS ####
-# FAM_ANNOTATIONS = MyRule(run=RUN, name="FAM_ANNOTATIONS")
-#
-# # params
-# FAM_ANNOTATIONS.p.param_1 = FAM_ANNOTATIONS.PARAMS.param_1
-#
-# # input
-# FAM_ANNOTATIONS.i.input_1 = str(FAM_ANNOTATIONS.IN.input_1 / "{something}.ext")
-#
-# # output
-# FAM_ANNOTATIONS.o.output_1 = str(FAM_ANNOTATIONS.out_dir / "{something}.ext")
-#
-# # ---
-# rule fam_annotations:
-#     log:
-#         path=str(FAM_ANNOTATIONS.log)
-#
-#     params:
-#         param_1=FAM_ANNOTATIONS.p.param_1,
-#
-#     input:
-#         input_1=FAM_ANNOTATIONS.i.input_1,
-#
-#     output:
-#         output_1=FAM_ANNOTATIONS.o.output_1,
-#
-#     script:
-#         "python/scripts/FAM_ANNOTATIONS.py"
-#
-# CONVERSIONS.append(rules.fam_annotations.output)
+# ------------------------- #
+#### MOI_TABLES ####
+MOI_TABLES = MyRule(run=RUN, name="MOI_TABLES")
+
+# params
+MOI_TABLES.p.mois = RUN.globals.mois
+
+# input
+MOI_TABLES.i.anno_tables = MAKE_ANNO_TABLES.o.anno_table_path_expanded
+
+# output
+MOI_TABLES.o.moi_tables_wldcd = str(MOI_TABLES.out_dir / "{moi}.csv")
+
+MOI_TABLES.o.moi_tables_expanded = expand(MOI_TABLES.o.moi_tables_wldcd, moi=RUN.globals.mois)
+
+# ---
+rule moi_tables:
+    log:
+        path=str(MOI_TABLES.log)
+
+    params:
+        mois=MOI_TABLES.p.mois,
+        out_dir=MOI_TABLES.out_dir
+
+    input:
+        anno_tables=MOI_TABLES.i.anno_tables,
+
+    output:
+        moi_tables=MOI_TABLES.o.moi_tables_expanded,
+
+    script:
+        "src/python/rules/moi_tables.py"
+
+CONVERSIONS.append(MOI_TABLES.o.moi_tables_expanded)
+
+
+# ------------------------- #
+#### FAM_MAPPINGS ####
+FAM_MAPPINGS = MyRule(run=RUN, name="FAM_MAPPINGS")
+
+# params
+
+# input
+FAM_MAPPINGS.i.bcfs = ANNOTATE_VCFS.o.bcf_expanded
+
+# output
+FAM_MAPPINGS.o.fam_map = str(FAM_MAPPINGS.out_dir / "fam_map.csv")
+FAM_MAPPINGS.o.fam_members_wldcd = str(FAM_MAPPINGS.out_dir / "{fam_names}.txt")
+FAM_MAPPINGS.o.fam_members_expanded = expand(FAM_MAPPINGS.o.fam_members_wldcd, fam_names=RUN.globals.fam_names)
+# ---
+rule fam_mappings:
+    log:
+        path=str(FAM_MAPPINGS.log)
+
+    params:
+        out_dir=FAM_MAPPINGS.out_dir,
+
+    input:
+        bcfs=FAM_MAPPINGS.i.bcfs,
+
+    output:
+        fam_members_expanded=FAM_MAPPINGS.o.fam_members_expanded,
+        fam_map=FAM_MAPPINGS.o.fam_map
+
+    run:
+
+        shell('parallel  bcftools query -l {{}} ">" data/processed/single_sibs_tag_testing/fam_mappings/{{/.}}.txt ::: {input.bcfs}')
+
+        with open(FAM_MAPPINGS.o.fam_map, 'w') as out:
+            out_line = "{fam_id},{subject_id}\n"
+
+            out.write(out_line.format(fam_id='FAM_ID', subject_id='SUBJECT_ID'))
+
+            for fam in output.fam_members_expanded:
+                fam = Path(fam)
+                for data_line in fam.open():
+                    sub_id = data_line.strip()
+                    out.write(out_line.format(fam_id=fam.stem, subject_id=sub_id))
+
+CONVERSIONS.extend([FAM_MAPPINGS.o.fam_members_expanded,
+                    FAM_MAPPINGS.o.fam_map])
+
 
 
 
@@ -673,13 +726,59 @@ rule draw_rule_graph:
         recoded_rule_graph_svg=DRAW_RULE_GRAPH.o.recoded_rule_graph_svg,
 
     run:
-        shell("snakemake -p -s {input.Snakefile}  --configfile {input.config} conversions --rulegraph > {output.rule_graph_dot}")
+        rule_name = RUN.globals.draw_rule
+        shell("snakemake -p -s {input.Snakefile}  --configfile {input.config} "+rule_name+" --rulegraph > {output.rule_graph_dot}")
 
         dag.recode_graph(dot=output.rule_graph_dot,
                          new_dot=output.recoded_rule_graph_dot,
                          pretty_names=RUN.pretty_names,
-                         rules_to_drop=['save_run_config','conversions'],
+                         rules_to_drop=['save_run_config',rule_name],
                          color="#50D0FF",
                          use_pretty_names=False)
 
         shell("dot -Tsvg {output.recoded_rule_graph_dot} -o {output.recoded_rule_graph_svg} -v ; echo ''")
+
+
+# ------------------------- #
+#### DRAW_DAG_GRAPH ####
+DRAW_DAG_GRAPH = MyRule(run=RUN, name="DRAW_DAG_GRAPH")
+
+# params
+DRAW_DAG_GRAPH.p.pretty_names = RUN.pretty_names
+
+# input
+
+# output
+DRAW_DAG_GRAPH.o.dag_graph_dot = str(DRAW_DAG_GRAPH.out_dir / "dag_graph.dot")
+DRAW_DAG_GRAPH.o.recoded_dag_graph_dot = str(DRAW_DAG_GRAPH.out_dir / "recoded_dag_graph.dot")
+DRAW_DAG_GRAPH.o.recoded_dag_graph_svg = str(DRAW_DAG_GRAPH.out_dir / "recoded_dag_graph.svg")
+
+# ---
+rule draw_dag_graph:
+    log:
+        path=str(DRAW_DAG_GRAPH.log)
+
+    params:
+        pretty_names=DRAW_DAG_GRAPH.p.pretty_names,
+
+    input:
+        Snakefile="{path}/Snakefile".format(path=os.path.realpath('.')),
+        config=rules.save_run_config.output,
+
+    output:
+        dag_graph_dot=DRAW_DAG_GRAPH.o.dag_graph_dot,
+        recoded_dag_graph_dot=DRAW_DAG_GRAPH.o.recoded_dag_graph_dot,
+        recoded_dag_graph_svg=DRAW_DAG_GRAPH.o.recoded_dag_graph_svg,
+
+    run:
+        rule_name = RUN.globals.draw_rule
+        shell("snakemake -p -s {input.Snakefile}  --configfile {input.config} "+rule_name+" --dag > {output.dag_graph_dot}")
+
+        dag.recode_graph(dot=output.dag_graph_dot,
+                         new_dot=output.recoded_dag_graph_dot,
+                         pretty_names=RUN.pretty_names,
+                         rules_to_drop=['save_run_config',rule_name],
+                         color="#50D0FF",
+                         use_pretty_names=False)
+
+        shell("dot -Tsvg {output.recoded_dag_graph_dot} -o {output.recoded_dag_graph_svg} -v ; echo ''")
