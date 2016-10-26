@@ -1,5 +1,6 @@
 """Snakemake file."""
 import os
+import inspect
 
 from pathlib import Path
 
@@ -15,6 +16,7 @@ sns.set_style("whitegrid")
 import munch
 
 from src.python.functions import *
+from src.python import dag
 
 
 def pathify_by_key_ends(dictionary):
@@ -38,6 +40,7 @@ class MyRun(object):
 
         common = cfg["COMMON"]
 
+        self.snakefile = Path(inspect.getfile(inspect.currentframe()))
         self.globals = munch.Munch()
         self.cfg = cfg
         self.name = common["RUN_NAME"]
@@ -46,18 +49,26 @@ class MyRun(object):
                                                            run_name=self.name
                                                            )
                             )
+        self.pretty_names = {}
         self.log_dir = self.out_dir / "logs"
 
 class MyRule(object):
 
     """Manage the initialization and deployment of rule-specific information."""
 
-    def __init__(self, run, name):
+    def __init__(self, run, name, pretty_name=None):
         """Initialize logs, inputs, outputs, params, etc for a single rule."""
         assert isinstance(run, MyRun)
 
+        if pretty_name is None:
+            pretty_name = name
+
         self.run = run
         self.name = name.lower()
+        self.pretty_name = pretty_name
+
+        self.run.pretty_names[self.name] = pretty_name
+
         self.log_dir = run.log_dir / self.name
         self.log = self.log_dir / "{name}.log".format(name=self.name)
         self.out_dir = run.out_dir / self.name
@@ -548,6 +559,38 @@ rule merge_vcfs:
 CONVERSIONS.append(rules.merge_vcfs.output)
 
 
+# # ------------------------- #
+# #### FAM_ANNOTATIONS ####
+# FAM_ANNOTATIONS = MyRule(run=RUN, name="FAM_ANNOTATIONS")
+#
+# # params
+# FAM_ANNOTATIONS.p.param_1 = FAM_ANNOTATIONS.PARAMS.param_1
+#
+# # input
+# FAM_ANNOTATIONS.i.input_1 = str(FAM_ANNOTATIONS.IN.input_1 / "{something}.ext")
+#
+# # output
+# FAM_ANNOTATIONS.o.output_1 = str(FAM_ANNOTATIONS.out_dir / "{something}.ext")
+#
+# # ---
+# rule fam_annotations:
+#     log:
+#         path=str(FAM_ANNOTATIONS.log)
+#
+#     params:
+#         param_1=FAM_ANNOTATIONS.p.param_1,
+#
+#     input:
+#         input_1=FAM_ANNOTATIONS.i.input_1,
+#
+#     output:
+#         output_1=FAM_ANNOTATIONS.o.output_1,
+#
+#     script:
+#         "python/scripts/FAM_ANNOTATIONS.py"
+#
+# CONVERSIONS.append(rules.fam_annotations.output)
+
 
 
 
@@ -595,3 +638,48 @@ rule clean_pre:
 rule clean_all:
     shell:
         "{rules.clean_pre.shellcmd} && {rules.clean_conversions.shellcmd}"
+
+
+
+# ------------------------- #
+#### DRAW_RULE_GRAPH ####
+DRAW_RULE_GRAPH = MyRule(run=RUN, name="DRAW_RULE_GRAPH")
+
+# params
+DRAW_RULE_GRAPH.p.pretty_names = RUN.pretty_names
+
+# input
+
+# output
+DRAW_RULE_GRAPH.o.rule_graph_dot = str(DRAW_RULE_GRAPH.out_dir / "rule_graph.dot")
+DRAW_RULE_GRAPH.o.recoded_rule_graph_dot = str(DRAW_RULE_GRAPH.out_dir / "recoded_rule_graph.dot")
+DRAW_RULE_GRAPH.o.recoded_rule_graph_svg = str(DRAW_RULE_GRAPH.out_dir / "recoded_rule_graph.svg")
+
+# ---
+rule draw_rule_graph:
+    log:
+        path=str(DRAW_RULE_GRAPH.log)
+
+    params:
+        pretty_names=DRAW_RULE_GRAPH.p.pretty_names,
+
+    input:
+        Snakefile=str(RUN.snakefile.absolute()),
+        config=rules.save_run_config.output,
+
+    output:
+        rule_graph_dot=DRAW_RULE_GRAPH.o.rule_graph_dot,
+        recoded_rule_graph_dot=DRAW_RULE_GRAPH.o.recoded_rule_graph_dot,
+        recoded_rule_graph_svg=DRAW_RULE_GRAPH.o.recoded_rule_graph_svg,
+
+    run:
+        shell("snakemake -p -s {input.Snakefile}  --configfile {input.config} conversions --rulegraph > {output.rule_graph_dot}")
+
+        dag.recode_graph(dot=output.rule_graph_dot,
+                         new_dot=output.recoded_rule_graph_dot,
+                         pretty_names=RUN.pretty_names,
+                         rules_to_drop=['save_run_config','conversions'],
+                         color="#50D0FF",
+                         use_pretty_names=False)
+
+        shell("dot -Tsvg {output.recoded_rule_graph_dot} -o {output.recoded_rule_graph_svg} -v ; echo ''")
